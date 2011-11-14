@@ -1,0 +1,3 @@
+Very simple script that is meant to run from cron that generates
+random tweets using dadadodo on a corpus of tweets gathered from its
+followers
