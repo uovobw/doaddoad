@@ -87,6 +87,22 @@ class DadaDodo(object):
 			print "FATAL: we got to update stage with an empty state!"
 			sys.exit(124)
 	
+	def addAllFollowers(self):
+		followersNames = [x.GetScreenName() for x in self.api.GetFollowers()]
+		followingNames = [x.GetScreenName() for x in self.api.GetFriends()]
+		toBeFollowed = []
+		# TODO: use sets for this,it's horrendous
+		for each in followersNames:
+			if each not in followingNames:
+				toBeFollowed.append(each)
+
+		if toBeFollowed:
+			for each in toBeFollowed:
+				newUser = self.api.CreateFriendship(each)
+				print "Adding user " + newUser.GetScreenName()
+				
+
+	
 	def handleRt(self,string):
 		pattern = re.compile(r"(^.*)([Rr][Tt]) +(\S+)\s(.*)$")
 		matcher = pattern.match(string)
@@ -115,6 +131,7 @@ if __name__ == "__main__":
 	if lastUpdateTime <= (time.time() - 7200):
 		d.updateState()
 		saveState =  True
+		d.addAllFollowers()
 	d.api.PostUpdate(d.generateTweets())
 	if saveState:
 		d.saveState()
