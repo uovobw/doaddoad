@@ -1,12 +1,15 @@
 #!/usr/bin/env python2.7
 
-import twitter
-import subprocess
-import cld
 import cPickle as pickle
-import re
 import os
+import re
+import subprocess
+import sys
 import time
+
+import twitter
+import cld
+
 import secrets
 
 class DadaDodo(object):
@@ -21,15 +24,17 @@ class DadaDodo(object):
 		self.access_token_key =	secrets.access_token_key
 		self.access_token_secret = secrets.access_token_secret
 
-		self.api = twitter.Api(consumer_key=self.consumer_key,consumer_secret=self.consumer_secret,access_token_key=self.access_token_key,access_token_secret=self.access_token_secret)
+		self.api = twitter.Api(consumer_key=self.consumer_key,
+		                       consumer_secret=self.consumer_secret,
+		                       access_token_key=self.access_token_key,
+		                       access_token_secret=self.access_token_secret)
 		self.user = None
 
 		try:
 			user = self.api.VerifyCredentials()
 			self.user = user
-		except TwitterError, e:
-			print e
-			print "ERROR in authenticating to twitter"
+		except twitter.TwitterError, e:
+			print "ERROR in authenticating to twitter: %s" % e
 			sys.exit(123)
 
 		self.lang = "en"
@@ -38,7 +43,10 @@ class DadaDodo(object):
 
 
 	def launch(self,strInput):
-		dadadodo =	subprocess.Popen(self.dadadodo,stdin=subprocess.PIPE,stderr=subprocess.PIPE,stdout=subprocess.PIPE)
+		dadadodo = subprocess.Popen(self.dadadodo,
+		                            stdin=subprocess.PIPE,
+		                            stderr=subprocess.PIPE,
+		                            stdout=subprocess.PIPE)
 		out, err = dadadodo.communicate(strInput)
 		return out
 
@@ -47,7 +55,7 @@ class DadaDodo(object):
 
 	def isEnglish(self,string):
 		try:
-			topLanguageName, topLanguageCode, isReliable, textBytesFound, details =	self.cldDetect(string)
+			topLanguageName, topLanguageCode, isReliable, textBytesFound, details = self.cldDetect(string)
 		except UnicodeEncodeError, e:
 			#print "Cannot detect language of \"%s\"" % (string)
 			print "errored"
@@ -60,14 +68,14 @@ class DadaDodo(object):
 		try:
 			state = pickle.load(fd)
 		except pickle.UnpicklingError, e:
-			print "Error in unpickling: " + e
+			print "Error in unpickling: %s" % e
 		return state
 
 	def saveState(self):
 		try:
 			pickle.dump(self.state,open(self.twitterLog,"w"),-1)
 		except pickle.PicklingError, e:
-			print "Error in pickling: " + e
+			print "Error in pickling: %s" % e
 
 	def updateState(self):
 		if self.state:
@@ -88,6 +96,8 @@ class DadaDodo(object):
 			sys.exit(124)
 	
 	def addAllFollowers(self):
+		"""Automatically follow-back. Web 2.0 just got real."""
+
 		followersNames = [x.GetScreenName() for x in self.api.GetFollowers()]
 		followingNames = [x.GetScreenName() for x in self.api.GetFriends()]
 		toBeFollowed = []
@@ -104,10 +114,13 @@ class DadaDodo(object):
 
 	
 	def handleRt(self,string):
+		"""Sometimes an RT might be generated in the middle of a sentence,
+		   move it at the beginning and put @ in front of the next word."""
+
 		pattern = re.compile(r"(^.*)([Rr][Tt]) +(\S+)\s(.*)$")
 		matcher = pattern.match(string)
 		if matcher:
-			string = "RT @%s %s%s" %	(matcher.group(3),matcher.group(1),matcher.group(4))
+			string = "RT @%s %s%s" % (matcher.group(3),matcher.group(1),matcher.group(4))
 		return string
 
 	def generateTweets(self):
@@ -135,6 +148,3 @@ if __name__ == "__main__":
 	d.api.PostUpdate(d.generateTweets())
 	if saveState:
 		d.saveState()
-
-
-	
