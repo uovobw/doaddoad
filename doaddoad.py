@@ -79,15 +79,17 @@ class DadaDodo(object):
 
 	def updateState(self):
 		if self.state:
+			stateTweets = { (x.GetText(), x.GetUser().GetId()) for x in self.state }
 			# get all the followers for doaddoad
 			allFollowers = self.api.GetFollowers()
 			for each in allFollowers:
 				print "Fetching timeline for user %s (@%s)" % (each.GetName(),each.GetScreenName())
 				# get the timeline for the user
 				timeline = self.api.GetUserTimeline(id=each.GetId(),count=20)
-				# add all the Status objects to the current status
+				# add all not-yet-seen tweets to the state
 				for status in timeline:
-					if self.isEnglish(status.GetText()):
+					tweet = (status.GetText(), status.GetUser().GetId())
+					if self.isEnglish(status.GetText()) and tweet not in stateTweets:
 						self.state.append(status)
 			if len(self.state) > self.stateLimit:
 				self.state = self.state[:-(self.stateLimit)]
