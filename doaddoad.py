@@ -102,19 +102,11 @@ class DadaDodo(object):
 
 		followersNames = [x.GetScreenName() for x in self.api.GetFollowers()]
 		followingNames = [x.GetScreenName() for x in self.api.GetFriends()]
-		toBeFollowed = []
-		# TODO: use sets for this,it's horrendous
-		for each in followersNames:
-			if each not in followingNames:
-				toBeFollowed.append(each)
 
-		if toBeFollowed:
-			for each in toBeFollowed:
-				newUser = self.api.CreateFriendship(each)
-				print "Adding user " + newUser.GetScreenName()
-				
+		for user in set(followersNames).difference(set(followingNames)):
+			newuser = self.api.CreateFriendship(user)
+			print "following back: %s" % newuser
 
-	
 	def handleRt(self,string):
 		"""Sometimes an RT might be generated in the middle of a sentence,
 		   move it at the beginning and put @ in front of the next word."""
