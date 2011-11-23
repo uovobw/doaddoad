@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import time
+import argparse
 
 import twitter
 import cld
@@ -14,10 +15,20 @@ import secrets
 
 class DadaDodo(object):
 	def __init__(self):
+
+		parser = argparse.ArgumentParser(description='Process some integers.')
+		parser.add_argument('-d',"--debug",dest='debug',action='store_true',default=False,help='enable debug mode (do not post to twitter,just print the generated tweet)')
+		parser.add_argument("-l","--language",dest="language",action="store",default="en",help="select the two digit code of the language to use for tweets (en,it,de...)")
+		parser.add_argument("-f","--file",dest="statefile",action="store",default="twitter.log",help="the	file to be used to store the state of the script bewteen runs")
+		parser.add_argument("-t","--refreshtime",dest="refreshtime",action="store",default=7200,help="the time after which update the state")
+		args = parser.parse_args()
+		
 		self.dadadodo = ["/usr/bin/dadadodo","-c","1","-"]
 		self.thisUser = "doaddoad"
-		self.twitterLog = "twitter.log"
-		self.lang = "en"
+		self.twitterLog = args.statefile
+		self.lang = args.language
+		self.debug = args.debug
+		self.refreshCacheTime = args.refreshtime
 
 		self.consumer_key = secrets.consumer_key
 		self.consumer_secret = secrets.consumer_secret
@@ -135,10 +146,14 @@ if __name__ == "__main__":
 	d = DadaDodo()
 	lastUpdateTime = os.stat(d.twitterLog).st_mtime
 	saveState = False
-	if lastUpdateTime <= (time.time() - 7200):
+	# check last time the cache was updated, if less than timeout, refresh it
+	if lastUpdateTime <= (time.time() - d.refreshCacheTime):
 		d.updateState()
 		saveState =  True
 		d.addAllFollowers()
-	d.api.PostUpdate(d.generateTweets())
+	if d.debug:
+		print d.generateTweets()
+	else:
+		d.api.PostUpdate(d.generateTweets())
 	if saveState:
 		d.saveState()
