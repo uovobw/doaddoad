@@ -96,7 +96,10 @@ class DadaDodo(object):
 			for each in allFollowers:
 				print "Fetching timeline for user %s (@%s)" % (each.GetName(),each.GetScreenName())
 				# get the timeline for the user
-				timeline = self.api.GetUserTimeline(id=each.GetId(),count=20)
+				try:
+					timeline = self.api.GetUserTimeline(id=each.GetId(),count=20)
+				except twitter.TwitterError:
+					continue
 				# add all not-yet-seen tweets to the state
 				for status in timeline:
 					tweet = (status.GetText(), status.GetUser().GetId())
@@ -116,7 +119,7 @@ class DadaDodo(object):
 
 		for user in set(followersNames).difference(set(followingNames)):
 			newuser = self.api.CreateFriendship(user)
-			print "following back: %s" % newuser
+			print "following back: %s" % newuser.getName()
 
 	def handleRt(self,string):
 		"""Sometimes an RT might be generated in the middle of a sentence,
