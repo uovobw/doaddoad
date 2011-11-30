@@ -118,8 +118,11 @@ class DadaDodo(object):
 		followingNames = [x.GetScreenName() for x in self.api.GetFriends()]
 
 		for user in set(followersNames).difference(set(followingNames)):
-			newuser = self.api.CreateFriendship(user)
-			print "following back: %s" % newuser.getName()
+			try:
+				newuser = self.api.CreateFriendship(user)
+				print "following back: %s" % newuser.getName()
+			except twitter.TwitterError:
+				print "follow request for user %s is pending" % user
 
 	def handleRt(self,string):
 		"""Sometimes an RT might be generated in the middle of a sentence,
