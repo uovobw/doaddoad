@@ -1,3 +1,7 @@
 Very simple script that is meant to run from cron that generates
 random tweets using dadadodo on a corpus of tweets gathered from its
 followers
+
+Dependencies:
+- python-twitter http://code.google.com/p/python-twitter/
+- chrome compact language detector XXX url
