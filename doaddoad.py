@@ -222,7 +222,7 @@ def main():
 
     twitter_api.PostUpdate(tweet)
 
-    if not os.path.exists(d.state_file) or 
+    if not os.path.exists(d.state_file) or \
             os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
         logging.info("updating state file %s" % d.state_file)
         d.update(twitter_api)
