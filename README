@@ -4,4 +4,5 @@ followers
 
 Dependencies:
 - python-twitter http://code.google.com/p/python-twitter/
-- chrome compact language detector XXX url
+- chrome compact language detector http://code.google.com/p/chromium-compact-language-detector/
+- dadadodo (expected to be in /usr/bin/dadadodo) http://www.jwz.org/dadadodo/
