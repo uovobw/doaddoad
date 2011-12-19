@@ -206,7 +206,7 @@ def main():
             access_token_key=secrets.access_token_key,
             access_token_secret=secrets.access_token_secret)
 
-    d = DoadDoad(dadadodo_bin="./dadadodo")
+    d = DoadDoad()
     d.load_state()
 
     tweet = d.generate_tweet(opts.language)
