@@ -209,6 +209,15 @@ def main():
     d = DoadDoad()
     d.load_state()
 
+    # update the state file with the timeline from our followers first
+    # in case of an empty state this "primes" the state (if we've got any followers)
+    if not opts.dry_run:
+        if not os.path.exists(d.state_file) or \
+                os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
+            logging.info("updating state file %s" % d.state_file)
+            d.update(twitter_api)
+            d.save_state(limit=opts.state_limit)
+
     tweet = d.generate_tweet(opts.language)
     if not tweet:
         logging.error("didn't get a tweet to post!")
@@ -216,17 +225,8 @@ def main():
 
     logging.info("updating timeline with %s" % repr(tweet))
 
-    if opts.dry_run:
-        # everything below changes the state, just quit for now
-        return 0
-
-    twitter_api.PostUpdate(tweet)
-
-    if not os.path.exists(d.state_file) or \
-            os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
-        logging.info("updating state file %s" % d.state_file)
-        d.update(twitter_api)
-        d.save_state(limit=opts.state_limit)
+    if not opts.dry_run:
+        twitter_api.PostUpdate(tweet)
 
 
 if __name__ == '__main__':
