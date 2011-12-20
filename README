@@ -1,3 +1,11 @@
 Very simple script that is meant to run from cron that generates
 random tweets using dadadodo on a corpus of tweets gathered from its
 followers
+
+Tests:
+	require Python-nose (http://readthedocs.org/docs/nose/en/latest/)
+	can be executed by running 
+	
+		nosetests test
+	
+	from the main project root
