@@ -190,6 +190,8 @@ def main():
             action="store_true", help="print debug information")
     parser.add_option("-r", "--refresh", dest="state_refresh", default=7200,
             metavar="SECONDS", help="refresh the state every SECONDS (%default)")
+    parser.add_option("-f", "--state-file", dest="state_file", default="doaddoad.state",
+            metavar="FILE", help="load and save state from FILE (%default)")
     parser.add_option("-t", "--trim", dest="state_limit", default=5000,
             metavar="NUMBER", help="keep the last NUMBER tweets when saving state, 0 to disable (%default)")
     parser.add_option("-l", "--lang", dest="language", default=None, metavar="LANG",
@@ -206,7 +208,7 @@ def main():
             access_token_key=secrets.access_token_key,
             access_token_secret=secrets.access_token_secret)
 
-    d = DoadDoad()
+    d = DoadDoad(state_file=opts.state_file)
     d.load_state()
 
     # update the state file with the timeline from our followers first
