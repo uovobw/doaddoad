@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 
+from twitter import TwitterError
 import twitter
 import cld
 
@@ -154,7 +155,7 @@ class DoadDoad(object):
             try:
                 new_user = twitter.CreateFriendship(user_id)
                 log.info("followed back %s" % new_user)
-            except twitter.TwitterError:
+            except TwitterError:
                 log.info("already following user id %s" % user_id)
 
     def update(self, twitter):
@@ -169,12 +170,18 @@ class DoadDoad(object):
 
     def add_timeline(self, twitter, user, count=20):
         """Add the last count tweets from the specified user."""
-        timeline = twitter.GetUserTimeline(id=user, count=count)
+        try:
+            timeline = twitter.GetUserTimeline(id=user, count=count)
+            # add all not-yet-seen tweets to the state which is keyed by tweet-id
+            for tweet in timeline:
+                if tweet.id not in self.state:
+                    self._add_tweet(tweet)
+        except TwitterError as e:
+            if e.message == "Not authorized":
+                log.info("Not authorized to get the timeline of the user")
+            else:
+                log.info(e)
 
-        # add all not-yet-seen tweets to the state which is keyed by tweet-id
-        for tweet in timeline:
-            if tweet.id not in self.state:
-                self._add_tweet(tweet)
 
     def _add_tweet(self, tweet):
         # encapsulate twitter.Status into our own cld-aware Tweet
