@@ -216,4 +216,6 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    logging.basicConfig()
+    logging.error("this module should be imported")
+    sys.exit(1)
