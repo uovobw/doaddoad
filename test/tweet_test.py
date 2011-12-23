@@ -12,10 +12,6 @@ def test_tweet_creation():
 
 
 def test_load_state():
-	#######
-	# skip the test for the time being
-	raise SkipTest
-	#######
 	d = DoadDoad()
 	d.load_state()
 	# assert it's a dict
