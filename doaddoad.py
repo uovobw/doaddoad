@@ -122,15 +122,15 @@ class DoadDoad(object):
 
     def _followback(self, twitter):
         """Follow back each of our followers."""
-        followers = set([ x for x in twitter.GetFollowerIDs() ])
-        following = set([ x for x in twitter.GetFriendIDs() ])
+        followers = set([ x.id for x in twitter.GetFollowers() ])
+        following = set([ x.id for x in twitter.GetFriends() ])
 
         for user_id in followers - following:
             try:
                 new_user = twitter.CreateFriendship(user_id)
                 log.info("followed back %s" % new_user)
-            except TwitterError:
-                log.info("already following user id %s" % user_id)
+            except TwitterError as e:
+                log.warn("error in following user id %s: %s" % (user_id, e))
 
     def update(self, twitter):
         """Update the state with new timelines from all followers."""
