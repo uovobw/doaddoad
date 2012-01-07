@@ -4,22 +4,28 @@ import cPickle
 import logging
 import optparse
 import os
-from random import shuffle
+import random
 import re
 import subprocess
 import sys
 import time
+import cStringIO as StringIO
 
 from twitter import TwitterError
 from Tweet import Tweet
 import twitter
 import cld
+# you'll need at least the git version 9f666cda
+# https://github.com/maraujop/requests-oauth
+import oauth_hook
+import requests
 
 import secrets
 
 TWEET_MAXLENGTH = 140
 
 log = logging.getLogger(__name__)
+
 
 class DoadDoadError(Exception):
     pass
@@ -66,7 +72,7 @@ class DoadDoad(object):
         def _dadadodo_input(language=None):
             """Generate input for dadadodo, munge the state into something usable."""
             shuffled_ids = self.state.keys()
-            shuffle(shuffled_ids)
+            random.shuffle(shuffled_ids)
             for tweet_id in shuffled_ids:
                 tweet = self.state[tweet_id]
                 if language and language != tweet.get_language_code():
@@ -132,8 +138,37 @@ class DoadDoad(object):
             except TwitterError as e:
                 log.warn("error in following user id %s: %s" % (user_id, e))
 
-    def update(self, twitter):
-        """Update the state with new timelines from all followers."""
+    def _change_profile_picture(self, twitter, probability):
+        """Randomly change the profile picture with one of the followers"""
+        if (random.random() * 100) >= probability:
+            return
+
+        api_url = "%s/account/update_profile_image.json" % twitter.base_url
+
+        follower_clone = [ (user.GetProfileImageUrl(), user.GetScreenName()) for user in twitter.GetFollowers() ]
+        follower_clone = random.choice(follower_clone)
+
+        if not follower_clone:
+            return
+
+        hook = oauth_hook.OAuthHook(access_token=twitter._access_token_key,
+                            access_token_secret=twitter._access_token_secret,
+                            consumer_key=twitter._consumer_key,
+                            consumer_secret=twitter._consumer_secret,
+                            header_auth=True)
+
+        client = requests.session(hooks={'pre_request': hook})
+        logging.debug("fetching new profile picture %s" % follower_clone[0])
+        image_file = StringIO.StringIO(twitter._FetchUrl(follower_clone[0]))
+        response = client.post(api_url, files={"image" : image_file})
+        # abusing python-twitter internal API, checks if the response contains an error
+        twitter._ParseAndCheckTwitter(response.content)
+        log.info("changed profile picture with @%s's (%s)" % (follower_clone[1], follower_clone[0]))
+
+    def update(self, twitter, probability=33):
+        """Update the state with new timelines from all followers.
+
+           Additionally change the profile picture with probability with one from our followers."""
         self._followback(twitter)
 
         followers = twitter.GetFollowers()
@@ -141,6 +176,8 @@ class DoadDoad(object):
             log.debug("fetching timeline for %s (@%s)" % (follower.name,
                 follower.screen_name))
             self.add_timeline(twitter, follower.id)
+
+        self._change_profile_picture(twitter, probability)
 
     def add_timeline(self, twitter, user, count=20):
         """Add the last count tweets from the specified user."""
@@ -155,7 +192,6 @@ class DoadDoad(object):
                 log.info("Not authorized to get the timeline of the user")
             else:
                 log.info(e)
-
 
     def _add_tweet(self, tweet):
         # encapsulate twitter.Status into our own cld-aware Tweet
@@ -181,6 +217,10 @@ def main():
     parser.add_option("-l", "--lang", dest="language", default=None, metavar="LANG",
             help="consider only tweets in language code LANG "
                  "e.g. 'en' (default: all tweets)")
+    # this is done only when updating the state, but it isn't clear
+    parser.add_option("-p", "--probability", dest="probability", default=33, metavar="NUMBER",
+            help="probability of setting the profile to picture to one of the followers's (%default)")
+
     opts, args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -201,7 +241,7 @@ def main():
         if not os.path.exists(d.state_file) or \
                 os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
             logging.info("updating state file %s" % d.state_file)
-            d.update(twitter_api)
+            d.update(twitter_api, opts.probability)
             d.save_state(limit=opts.state_limit)
 
     tweet = d.generate_tweet(opts.language)
