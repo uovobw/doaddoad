@@ -220,10 +220,16 @@ def main():
     # this is done only when updating the state, but it isn't clear
     parser.add_option("-p", "--probability", dest="probability", default=33, metavar="NUMBER",
             help="probability of setting the profile to picture to one of the followers's (%default)")
+    parser.add_option("-L", "--logfile", action="store", dest="logfile", default="doaddoad.log", metavar="FILENAME",
+            help="logile, if not specified stdout (%default)")
 
     opts, args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO)
+    if not opts.logfile:
+        logfd = sys.stdout
+    else:
+        logfd = open(opts.logfile,"a")
+    logging.basicConfig(level=logging.INFO,stream=logfd)
     if opts.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
