@@ -214,6 +214,7 @@ def main():
             metavar="FILE", help="load and save state from FILE (%default)")
     parser.add_option("-t", "--trim", dest="state_limit", default=5000,
             metavar="NUMBER", help="keep the last NUMBER tweets when saving state, 0 to disable (%default)")
+    parser.add_option("-s", "--status", dest="usertweet", metavar="TEXT", help="post an arbitrary status to twitter")
     parser.add_option("-l", "--lang", dest="language", default=None, metavar="LANG",
             help="consider only tweets in language code LANG "
                  "e.g. 'en' (default: all tweets)")
@@ -229,7 +230,7 @@ def main():
         logfd = sys.stdout
     else:
         logfd = open(opts.logfile,"a")
-    logging.basicConfig(level=logging.INFO,stream=logfd)
+    logging.basicConfig(level=logging.INFO,stream=logfd,format="[%(asctime)-15s] %(message)s")
     if opts.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
@@ -250,10 +251,13 @@ def main():
             d.update(twitter_api, opts.probability)
             d.save_state(limit=opts.state_limit)
 
-    tweet = d.generate_tweet(opts.language)
-    if not tweet:
-        logging.error("didn't get a tweet to post!")
-        return 1
+    if opts.usertweet:
+        tweet = opts.usertweet
+    else:
+        tweet = d.generate_tweet(opts.language)
+        if not tweet:
+            logging.error("didn't get a tweet to post!")
+            return 1
 
     logging.info("updating timeline with %s" % repr(tweet))
 
