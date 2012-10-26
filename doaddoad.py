@@ -165,13 +165,17 @@ class DoadDoad(object):
         twitter._ParseAndCheckTwitter(response.content)
         log.info("changed profile picture with @%s's (%s)" % (follower_clone[1], follower_clone[0]))
 
-    def update(self, twitter, probability=33):
+    def update(self, twitter, probability=33, maxupdates=0):
         """Update the state with new timelines from all followers.
 
            Additionally change the profile picture with probability with one from our followers."""
         self._followback(twitter)
 
         followers = twitter.GetFollowers()
+        if maxupdates > 0:
+            random.shuffle(followers)
+            followers = followers[:maxupdates]
+
         for follower in followers:
             log.debug("fetching timeline for %s (@%s)" % (follower.name,
                 follower.screen_name))
@@ -220,9 +224,11 @@ def main():
                  "e.g. 'en' (default: all tweets)")
     # this is done only when updating the state, but it isn't clear
     parser.add_option("-p", "--probability", dest="probability", default=33, metavar="NUMBER",
-            help="probability of setting the profile to picture to one of the followers's (%default)")
+            help="probability of setting the profile to picture to one of the followers' (%default)")
+    parser.add_option("-m", "--maxupdates", dest="maxupdates", default=0, metavar="NUMBER",
+            help="limit the number of timelines to fetch, useful if hitting twitter's API limit (%default)")
     parser.add_option("-L", "--logfile", action="store", dest="logfile", default="doaddoad.log", metavar="FILENAME",
-            help="logile, if not specified stdout (%default)")
+            help="logfile, if not specified stdout (%default)")
 
     opts, args = parser.parse_args()
 
@@ -248,7 +254,7 @@ def main():
         if not os.path.exists(d.state_file) or \
                 os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
             logging.info("updating state file %s" % d.state_file)
-            d.update(twitter_api, opts.probability)
+            d.update(twitter_api, opts.probability, opts.maxupdates)
             d.save_state(limit=opts.state_limit)
 
     if opts.usertweet:
