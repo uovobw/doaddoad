@@ -13,6 +13,8 @@ import cStringIO as StringIO
 
 from twitter import TwitterError
 from Tweet import Tweet
+# you'll need at least the git version e572f2ff4
+# https://github.com/bear/python-twitter
 import twitter
 import cld
 # you'll need at least the git version 9f666cda
@@ -128,7 +130,9 @@ class DoadDoad(object):
 
     def _followback(self, twitter):
         """Follow back each of our followers."""
+        log.debug("followback fetching followers")
         followers = set([ x.id for x in twitter.GetFollowers() ])
+        log.debug("followback fetching friends")
         following = set([ x.id for x in twitter.GetFriends() ])
 
         for user_id in followers - following:
@@ -171,6 +175,7 @@ class DoadDoad(object):
            Additionally change the profile picture with probability with one from our followers."""
         self._followback(twitter)
 
+        log.debug("fetching followers")
         followers = twitter.GetFollowers()
         if maxupdates > 0:
             random.shuffle(followers)
@@ -269,6 +274,9 @@ def main():
 
     if not opts.dry_run:
         twitter_api.PostUpdate(tweet)
+
+    rate_limit_status = twitter_api.GetRateLimitStatus()
+    logging.info("remaining API hits %s", rate_limit_status.get('remaining_hits', 'N/A'))
 
 
 if __name__ == '__main__':
