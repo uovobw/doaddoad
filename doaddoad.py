@@ -151,11 +151,14 @@ class DoadDoad(object):
 
         api_url = "%s/account/update_profile_image.json" % twitter.base_url
 
-        follower_clone = [ (user.GetProfileImageUrl(), user.GetScreenName()) for user in twitter.GetFollowers() ]
+        follower_clone = [ user for user in twitter.GetFollowers() ]
         follower_clone = random.choice(follower_clone)
 
         if not follower_clone:
             return
+
+        profile_image_url = follower_clone.GetProfileImageUrl()
+        screen_name = follower_clone.GetScreenName()
 
         hook = oauth_hook.OAuthHook(access_token=twitter._access_token_key,
                             access_token_secret=twitter._access_token_secret,
@@ -164,12 +167,12 @@ class DoadDoad(object):
                             header_auth=True)
 
         client = requests.session(hooks={'pre_request': hook})
-        log.debug("fetching new profile picture %s", follower_clone[0])
-        image_file = StringIO.StringIO(twitter._FetchUrl(follower_clone[0]))
+        log.debug("fetching new profile picture %s", profile_image_url)
+        image_file = StringIO.StringIO(twitter._FetchUrl(profile_image_url)
         response = client.post(api_url, files={"image" : image_file})
         # abusing python-twitter internal API, checks if the response contains an error
         twitter._ParseAndCheckTwitter(response.content)
-        log.info("changed profile picture with @%s's (%s)", follower_clone[1], follower_clone[0])
+        log.info("changed profile picture with @%s's (%s)", screen_name, profile_image_url)
 
     def update(self, twitter, probability=33, maxupdates=0):
         """Update the state with new timelines from all followers.
