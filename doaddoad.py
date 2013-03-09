@@ -227,16 +227,16 @@ def main():
             help="probability of setting the profile to picture to one of the followers' (%default)")
     parser.add_option("-m", "--maxupdates", dest="maxupdates", default=0, metavar="NUMBER",
             help="limit the number of timelines to fetch, useful if hitting twitter's API limit (%default)")
-    parser.add_option("-L", "--logfile", action="store", dest="logfile", default="doaddoad.log", metavar="FILENAME",
-            help="logfile, if not specified stdout (%default)")
+    parser.add_option("-L", "--logfile", action="store", dest="logfile", metavar="FILENAME",
+            help="write log to FILENAME")
 
     opts, args = parser.parse_args()
 
-    if not opts.logfile:
-        logfd = sys.stdout
-    else:
-        logfd = open(opts.logfile,"a")
-    logging.basicConfig(level=logging.INFO,stream=logfd,format="[%(asctime)-15s] %(message)s")
+    logfd = sys.stdout
+    if opts.logfile:
+        logfd = open(opts.logfile, "a")
+
+    logging.basicConfig(level=logging.INFO, stream=logfd, format="[%(asctime)-15s] %(message)s")
     if opts.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
