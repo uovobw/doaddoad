@@ -55,6 +55,7 @@ class DoadDoad(object):
         if not os.path.exists(self.state_file):
             return
 
+        log.debug("loading state from %s", self.state_file)
         with open(self.state_file, "r") as state_file:
             self.state = cPickle.load(state_file)
 
@@ -63,6 +64,7 @@ class DoadDoad(object):
         """Persist the state to self.state_file, using only the newest limit tweets."""
         self._trim_state(limit)
 
+        log.debug("saving state to %s", self.state_file)
         with open(self.state_file, "w") as state_file:
             cPickle.dump(self.state, state_file, -1)
 
@@ -85,12 +87,12 @@ class DoadDoad(object):
 
         def _extract_tweet(text):
             """Fix output from dadadodo into a usable tweet."""
-            log.debug("extracting a tweet from %s" % repr(text))
+            log.debug("extracting a tweet from %s", repr(text))
             text = text.replace("\t", " ").replace("\n", " ").strip()
             text = re.sub(" +", " ", text)
 
             if len(text) > TWEET_MAXLENGTH:
-                log.debug("trimming '%s' from %d to %d" % (text, len(text), TWEET_MAXLENGTH))
+                log.debug("trimming '%s' from %d to %d", text, len(text), TWEET_MAXLENGTH)
                 # trim to length and discard truncated words
                 text = text[:TWEET_MAXLENGTH]
                 text = text[:text.rindex(" ")]
@@ -112,10 +114,10 @@ class DoadDoad(object):
 
         input_text = " ".join(_dadadodo_input(language))
         result = self._run_dadadodo(input_text)
-        #log.debug("text from dadadodo '%s'" % repr(result))
+        #log.debug("text from dadadodo '%s'", repr(result))
 
         generated_tweet = _extract_tweet(result)
-        log.debug("extracted tweet %s" % repr(generated_tweet))
+        log.debug("extracted tweet %s", repr(generated_tweet))
 
         return generated_tweet
 
@@ -130,17 +132,17 @@ class DoadDoad(object):
 
     def _followback(self, twitter):
         """Follow back each of our followers."""
-        log.debug("followback fetching followers")
+        log.debug("fetching followers to followback")
         followers = set([ x.id for x in twitter.GetFollowers() ])
-        log.debug("followback fetching friends")
+        log.debug("fetching friends to followback")
         following = set([ x.id for x in twitter.GetFriends() ])
 
         for user_id in followers - following:
             try:
                 new_user = twitter.CreateFriendship(user_id)
-                log.info("followed back %s" % new_user)
+                log.info("followed back %s", new_user)
             except TwitterError as e:
-                log.warn("error in following user id %s: %s" % (user_id, e))
+                log.warn("error in following user id %s: %s", user_id, e)
 
     def _change_profile_picture(self, twitter, probability):
         """Randomly change the profile picture with one of the followers"""
@@ -162,12 +164,12 @@ class DoadDoad(object):
                             header_auth=True)
 
         client = requests.session(hooks={'pre_request': hook})
-        logging.debug("fetching new profile picture %s" % follower_clone[0])
+        log.debug("fetching new profile picture %s", follower_clone[0])
         image_file = StringIO.StringIO(twitter._FetchUrl(follower_clone[0]))
         response = client.post(api_url, files={"image" : image_file})
         # abusing python-twitter internal API, checks if the response contains an error
         twitter._ParseAndCheckTwitter(response.content)
-        log.info("changed profile picture with @%s's (%s)" % (follower_clone[1], follower_clone[0]))
+        log.info("changed profile picture with @%s's (%s)", follower_clone[1], follower_clone[0])
 
     def update(self, twitter, probability=33, maxupdates=0):
         """Update the state with new timelines from all followers.
@@ -177,7 +179,8 @@ class DoadDoad(object):
 
         log.debug("fetching followers")
         followers = twitter.GetFollowers()
-        if maxupdates > 0:
+        if maxupdates > 0 and maxupdates > len(followers):
+            log.info("limiting timeline fetching to %s", maxupdates)
             random.shuffle(followers)
             followers = followers[:maxupdates]
 
@@ -258,7 +261,7 @@ def main():
     if not opts.dry_run:
         if not os.path.exists(d.state_file) or \
                 os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
-            logging.info("updating state file %s" % d.state_file)
+            log.info("updating state file %s" % d.state_file)
             d.update(twitter_api, opts.probability, opts.maxupdates)
             d.save_state(limit=opts.state_limit)
 
@@ -267,16 +270,16 @@ def main():
     else:
         tweet = d.generate_tweet(opts.language)
         if not tweet:
-            logging.error("didn't get a tweet to post!")
+            log.error("didn't get a tweet to post!")
             return 1
 
-    logging.info("updating timeline with %s" % repr(tweet))
+    log.info("updating timeline with %s" % repr(tweet))
 
     if not opts.dry_run:
         twitter_api.PostUpdate(tweet)
 
     rate_limit_status = twitter_api.GetRateLimitStatus()
-    logging.info("remaining API hits %s", rate_limit_status.get('remaining_hits', 'N/A'))
+    log.info("remaining API hits %s", rate_limit_status.get('remaining_hits', 'N/A'))
 
 
 if __name__ == '__main__':
