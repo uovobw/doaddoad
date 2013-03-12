@@ -168,7 +168,7 @@ class DoadDoad(object):
 
         client = requests.session(hooks={'pre_request': hook})
         log.debug("fetching new profile picture %s", profile_image_url)
-        image_file = StringIO.StringIO(twitter._FetchUrl(profile_image_url)
+        image_file = StringIO.StringIO(twitter._FetchUrl(profile_image_url))
         response = client.post(api_url, files={"image" : image_file})
         # abusing python-twitter internal API, checks if the response contains an error
         twitter._ParseAndCheckTwitter(response.content)
