@@ -182,7 +182,7 @@ class DoadDoad(object):
 
         log.debug("fetching followers")
         followers = twitter.GetFollowers()
-        if maxupdates > 0 and maxupdates > len(followers):
+        if maxupdates > 0:
             log.info("limiting timeline fetching to %s", maxupdates)
             random.shuffle(followers)
             followers = followers[:maxupdates]
