@@ -265,7 +265,7 @@ def main():
         if not os.path.exists(d.state_file) or \
                 os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
             log.info("updating state file %s" % d.state_file)
-            d.update(twitter_api, opts.probability, opts.maxupdates)
+            d.update(twitter_api, opts.probability, int(opts.maxupdates))
             d.save_state(limit=opts.state_limit)
 
     if opts.usertweet:
