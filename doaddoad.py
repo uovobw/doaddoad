@@ -197,7 +197,7 @@ class DoadDoad(object):
     def add_timeline(self, twitter, user, count=20):
         """Add the last count tweets from the specified user."""
         try:
-            timeline = twitter.GetUserTimeline(id=user, count=count)
+            timeline = twitter.GetUserTimeline(user_id=user, count=count)
             # add all not-yet-seen tweets to the state which is keyed by tweet-id
             for tweet in timeline:
                 if tweet.id not in self.state:
