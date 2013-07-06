@@ -16,7 +16,6 @@ from Tweet import Tweet
 # you'll need at least the git version e572f2ff4
 # https://github.com/bear/python-twitter
 import twitter
-import cld
 # you'll need at least the git version 9f666cda
 # https://github.com/maraujop/requests-oauth
 import oauth_hook
@@ -144,15 +143,14 @@ class DoadDoad(object):
             except TwitterError as e:
                 log.warn("error in following user id %s: %s", user_id, e)
 
-    def _change_profile_picture(self, twitter, probability):
+    def _change_profile_picture(self, twitter, followers, probability):
         """Randomly change the profile picture with one of the followers"""
         if (random.random() * 100) >= probability:
             return
 
         api_url = "%s/account/update_profile_image.json" % twitter.base_url
 
-        follower_clone = [ user for user in twitter.GetFollowers() ]
-        follower_clone = random.choice(follower_clone)
+        follower_clone = random.choice(followers)
 
         if not follower_clone:
             return
@@ -174,7 +172,7 @@ class DoadDoad(object):
         twitter._ParseAndCheckTwitter(response.content)
         log.info("changed profile picture with @%s's (%s)", screen_name, profile_image_url)
 
-    def update(self, twitter, probability=33, maxupdates=0):
+   def update(self, twitter, probability=33, maxupdates=0):
         """Update the state with new timelines from all followers.
 
            Additionally change the profile picture with probability with one from our followers."""
@@ -192,7 +190,7 @@ class DoadDoad(object):
                 follower.screen_name))
             self.add_timeline(twitter, follower.id)
 
-        self._change_profile_picture(twitter, probability)
+        #self._change_profile_picture(twitter, followers, probability)
 
     def add_timeline(self, twitter, user, count=20):
         """Add the last count tweets from the specified user."""
@@ -212,7 +210,6 @@ class DoadDoad(object):
         # encapsulate twitter.Status into our own cld-aware Tweet
         tweet = Tweet(tweet)
         self.state[tweet.status.id] = tweet
-
 
 # XXX interactive mode: generate tweets and selectively choose which ones to post
 # XXX randomly reply to people which have replied to us?
