@@ -172,7 +172,7 @@ class DoadDoad(object):
         twitter._ParseAndCheckTwitter(response.content)
         log.info("changed profile picture with @%s's (%s)", screen_name, profile_image_url)
 
-   def update(self, twitter, probability=33, maxupdates=0):
+    def update(self, twitter, probability=33, maxupdates=0):
         """Update the state with new timelines from all followers.
 
            Additionally change the profile picture with probability with one from our followers."""
