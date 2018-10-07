@@ -1,3 +1,6 @@
-httlib2
+httplib2
 requests
+requests-oauth
+python-twitter
+pycld2
 
