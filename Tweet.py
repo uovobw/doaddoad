@@ -19,7 +19,7 @@ class Tweet(object):
                                          isPlainText=True,
                                          includeExtendedLanguages=False)
         except UnicodeEncodeError, e:
-            log.warn("language detection failed on %s" % repr(status.text))
+            log.warn("language detection failed on %r" % status.text)
 
     def get_language_code(self, reliable=True):
         if not self.cld_result: return None

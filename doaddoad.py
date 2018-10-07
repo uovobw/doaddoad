@@ -86,7 +86,7 @@ class DoadDoad(object):
 
         def _extract_tweet(text):
             """Fix output from dadadodo into a usable tweet."""
-            log.debug("extracting a tweet from %s", repr(text))
+            log.debug("extracting a tweet from %r", text)
             text = text.replace("\t", " ").replace("\n", " ").strip()
             text = re.sub(" +", " ", text)
 
@@ -109,14 +109,14 @@ class DoadDoad(object):
             return text
 
         if language and language not in Tweet.language_codes:
-            raise DoadDoadError("language %s is not detectable" % repr(language))
+            raise DoadDoadError("language %r is not detectable" % language)
 
         input_text = " ".join(_dadadodo_input(language))
         result = self._run_dadadodo(input_text)
-        #log.debug("text from dadadodo '%s'", repr(result))
+        #log.debug("text from dadadodo '%r'", result)
 
         generated_tweet = _extract_tweet(result)
-        log.debug("extracted tweet %s", repr(generated_tweet))
+        log.debug("extracted tweet %r", generated_tweet)
 
         return generated_tweet
 
@@ -273,7 +273,7 @@ def main():
             log.error("didn't get a tweet to post!")
             return 1
 
-    log.info("updating timeline with %s" % repr(tweet))
+    log.info("updating timeline with %r" % tweet)
 
     if not opts.dry_run:
         twitter_api.PostUpdate(tweet)
