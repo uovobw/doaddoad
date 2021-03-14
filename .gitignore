@@ -3,3 +3,4 @@
 secrets.py
 cld.so
 twitter.py
+.tox
