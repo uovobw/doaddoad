@@ -1,4 +1,4 @@
-import cld
+import pycld2 as cld
 import logging
 
 log = logging.getLogger(__name__)
@@ -16,8 +16,7 @@ class Tweet(object):
         try:
             # topLanguageName, topLanguageCode, isReliable, textBytesFound, details
             self.cld_result = cld.detect(status.text.encode("ascii", "ignore"),
-                                         isPlainText=True,
-                                         includeExtendedLanguages=False)
+                                         isPlainText=True)
         except UnicodeEncodeError, e:
             log.warn("language detection failed on %r" % status.text)
 
