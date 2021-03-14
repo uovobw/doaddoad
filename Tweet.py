@@ -17,7 +17,7 @@ class Tweet(object):
             # topLanguageName, topLanguageCode, isReliable, textBytesFound, details
             self.cld_result = cld.detect(status.text.encode("ascii", "ignore"),
                                          isPlainText=True)
-        except UnicodeEncodeError, e:
+        except UnicodeEncodeError as e:
             log.warn("language detection failed on %r" % status.text)
 
     def get_language_code(self, reliable=True):

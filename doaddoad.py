@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-import cPickle
+import pickle
 import logging
 import optparse
 import os
@@ -59,7 +59,7 @@ class DoadDoad(object):
 
         log.debug("loading state from %s", self.state_file)
         with open(self.state_file, "r") as state_file:
-            self.state = cPickle.load(state_file)
+            self.state = pickle.load(state_file)
 
     # XXX make load/save state context managers
     def save_state(self, limit=5000):
@@ -68,7 +68,7 @@ class DoadDoad(object):
 
         log.debug("saving state to %s", self.state_file)
         with open(self.state_file, "w") as state_file:
-            cPickle.dump(self.state, state_file, -1)
+            pickle.dump(self.state, state_file, -1)
 
     # XXX generating a lot of tweets is not efficient because we're forking dadadodo
     # each time
@@ -77,7 +77,7 @@ class DoadDoad(object):
 
         def _dadadodo_input(language=None):
             """Generate input for dadadodo, munge the state into something usable."""
-            shuffled_ids = self.state.keys()
+            shuffled_ids = list(self.state.keys())
             random.shuffle(shuffled_ids)
             for tweet_id in shuffled_ids:
                 tweet = self.state[tweet_id]
