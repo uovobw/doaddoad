@@ -11,5 +11,5 @@ class DummyStatus(object):
 
 class TweetTest(unittest.TestCase):
     def test_tweet_creation(self):
-      doaddoadTweet = Tweet(DummyStatus("foo"))
+      doaddoadTweet = Tweet(DummyStatus("This is an english sentence."))
       self.assertEqual(doaddoadTweet.get_language_code(), "en")

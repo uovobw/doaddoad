@@ -7,26 +7,24 @@ log = logging.getLogger(__name__)
 class Tweet(object):
     """Wrap a twitter.Status object with language detection methods."""
 
-    language_codes = [ x[1] for x in cld.LANGUAGES ]
+    language_codes = [x[1] for x in cld.LANGUAGES]
 
     def __init__(self, status):
         self.status = status
-        self.cld_result = None
+        self.cld_bytes = 0
+        self.cld_reliable = None
+        self.cld_details = None
 
         try:
             # topLanguageName, topLanguageCode, isReliable, textBytesFound, details
-            self.cld_result = cld.detect(status.text.encode("ascii", "ignore"),
-                                         isPlainText=True)
+            self.cld_reliable, self.cld_bytes, self.cld_details = cld.detect(
+                status.text.encode("ascii", "ignore"), isPlainText=True
+            )
         except UnicodeEncodeError as e:
             log.warn("language detection failed on %r" % status.text)
 
-    def get_language_code(self, reliable=True):
-        if not self.cld_result: return None
+    def get_language_code(self):
+        if not self.cld_details:
+            return None
 
-        if reliable:
-            return reliable == self.cld_result[2] and self.cld_result[1] or None
-
-        return self.cld_result[1]
-
-
-
+        return self.cld_details[0][1]
