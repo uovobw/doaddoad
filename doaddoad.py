@@ -9,17 +9,12 @@ import re
 import subprocess
 import sys
 import time
-import cStringIO as StringIO
 
 from twitter import TwitterError
 from Tweet import Tweet
 # you'll need at least the git version e572f2ff4
 # https://github.com/bear/python-twitter
 import twitter
-# you'll need at least the git version 9f666cda
-# https://github.com/maraujop/requests-oauth
-import oauth_hook
-import requests
 
 import secrets
 
@@ -146,34 +141,6 @@ class DoadDoad(object):
             except TwitterError as e:
                 log.warn("error in following user id %s: %s", user_id, e)
 
-    def _change_profile_picture(self, twitter, followers, probability):
-        """Randomly change the profile picture with one of the followers"""
-        if (random.random() * 100) >= probability:
-            return
-
-        api_url = "%s/account/update_profile_image.json" % twitter.base_url
-
-        follower_clone = random.choice(followers)
-
-        if not follower_clone:
-            return
-
-        profile_image_url = follower_clone.GetProfileImageUrl()
-        screen_name = follower_clone.GetScreenName()
-
-        hook = oauth_hook.OAuthHook(access_token=twitter._access_token_key,
-                            access_token_secret=twitter._access_token_secret,
-                            consumer_key=twitter._consumer_key,
-                            consumer_secret=twitter._consumer_secret,
-                            header_auth=True)
-
-        client = requests.session(hooks={'pre_request': hook})
-        log.debug("fetching new profile picture %s", profile_image_url)
-        image_file = StringIO.StringIO(twitter._FetchUrl(profile_image_url))
-        response = client.post(api_url, files={"image" : image_file})
-        # abusing python-twitter internal API, checks if the response contains an error
-        twitter._ParseAndCheckTwitter(response.content)
-        log.info("changed profile picture with @%s's (%s)", screen_name, profile_image_url)
 
     def update(self, twitter, probability=33, maxupdates=0):
         """Update the state with new timelines from all followers.
@@ -192,8 +159,6 @@ class DoadDoad(object):
             log.debug("fetching timeline for %s (@%s)" % (follower.name,
                 follower.screen_name))
             self.add_timeline(twitter, follower.id)
-
-        #self._change_profile_picture(twitter, followers, probability)
 
     def add_timeline(self, twitter, user, count=20):
         """Add the last count tweets from the specified user."""
