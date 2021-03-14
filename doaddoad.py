@@ -236,7 +236,8 @@ def main():
     # this is done only when updating the state, but it isn't clear
     parser.add_option("-p", "--probability", dest="probability", default=33, metavar="NUMBER",
             help="probability of setting the profile to picture to one of the followers' (%default)")
-    parser.add_option("-m", "--maxupdates", dest="maxupdates", default=0, metavar="NUMBER",
+    parser.add_option("-m", "--maxupdates", dest="maxupdates", default=0,
+            metavar="NUMBER", type=int,
             help="limit the number of timelines to fetch, useful if hitting twitter's API limit (%default)")
     parser.add_option("-L", "--logfile", action="store", dest="logfile", metavar="FILENAME",
             help="write log to FILENAME")
@@ -265,7 +266,7 @@ def main():
         if not os.path.exists(d.state_file) or \
                 os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
             log.info("updating state file %s" % d.state_file)
-            d.update(twitter_api, opts.probability, int(opts.maxupdates))
+            d.update(twitter_api, opts.probability, opts.maxupdates)
             d.save_state(limit=opts.state_limit)
 
     if opts.usertweet:
