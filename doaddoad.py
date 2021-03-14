@@ -37,6 +37,9 @@ class DoadDoad(object):
         self.dadadodo_cmd = [dadadodo_bin]
         self.dadadodo_opts = ["-c", "1", "-"]
 
+        if not os.path.exists(self.dadadodo_cmd[0]):
+            raise ValueError("can't find dadadodo at %s", self.dadadodo_cmd)
+
         # state is a dict tweet_id: Tweet object
         self.state = {}
         self.state_file = state_file
