@@ -255,7 +255,8 @@ def main():
     twitter_api = twitter.Api(consumer_key=secrets.consumer_key,
             consumer_secret=secrets.consumer_secret,
             access_token_key=secrets.access_token_key,
-            access_token_secret=secrets.access_token_secret)
+            access_token_secret=secrets.access_token_secret,
+            sleep_on_rate_limit=True)
 
     d = DoadDoad(state_file=opts.state_file)
     d.load_state()
