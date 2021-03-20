@@ -12,6 +12,7 @@ import time
 
 from twitter import TwitterError
 from Tweet import Tweet
+
 # you'll need at least the git version e572f2ff4
 # https://github.com/bear/python-twitter
 import twitter
@@ -40,14 +41,16 @@ class DoadDoad(object):
         self.state_file = state_file
 
     def _run_dadadodo(self, input_string):
-        dadadodo = subprocess.Popen(self.dadadodo_cmd + self.dadadodo_opts,
-                stdin=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE)
+        dadadodo = subprocess.Popen(
+            self.dadadodo_cmd + self.dadadodo_opts,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
         out, err = dadadodo.communicate(input_string)
 
         # dadadodo is ascii only, force encoding from bytes
-        return str(out, 'ascii')
+        return str(out, "ascii")
 
     def load_state(self):
         if not os.path.exists(self.state_file):
@@ -81,7 +84,7 @@ class DoadDoad(object):
                     continue
                 # dadadodo seems to ignore non-ascii input
                 text = tweet.status.text.encode("ascii", "ignore")
-                text = re.sub(b'\s+', b' ', text)
+                text = re.sub(b"\s+", b" ", text)
                 yield text
 
         def _extract_tweet(text):
@@ -91,20 +94,25 @@ class DoadDoad(object):
             text = re.sub(" +", " ", text)
 
             if len(text) > TWEET_MAXLENGTH:
-                log.debug("trimming '%s' from %d to %d", text, len(text), TWEET_MAXLENGTH)
+                log.debug(
+                    "trimming '%s' from %d to %d", text, len(text), TWEET_MAXLENGTH
+                )
                 # trim to length and discard truncated words
                 text = text[:TWEET_MAXLENGTH]
-                text = text[:text.rindex(" ")]
+                text = text[: text.rindex(" ")]
 
             # if an RT is generated in the middle of a tweet, move RT at the
             # beginning and prepend whatever word was after that with @
-            rt_find_re = re.compile(r"(?P<lead>^.*)([Rr][Tt]) +@?"
-                                     "(?P<who>\S+) ?(?P<trail>.*)$")
+            rt_find_re = re.compile(
+                r"(?P<lead>^.*)([Rr][Tt]) +@?" "(?P<who>\S+) ?(?P<trail>.*)$"
+            )
             rt_match = rt_find_re.match(text)
             if rt_match:
-                text = "RT @%s %s%s" % (rt_match.group('who'),
-                                        rt_match.group('lead'),
-                                        rt_match.group('trail'))
+                text = "RT @%s %s%s" % (
+                    rt_match.group("who"),
+                    rt_match.group("lead"),
+                    rt_match.group("trail"),
+                )
 
             return text
 
@@ -122,7 +130,8 @@ class DoadDoad(object):
         return generated_tweet
 
     def _trim_state(self, limit):
-        if limit == 0: return
+        if limit == 0:
+            return
 
         # instead of fiddling with timestamps, assume there's a correlation
         # between tweet id and the time it has been posted.
@@ -133,9 +142,9 @@ class DoadDoad(object):
     def _followback(self, twitter):
         """Follow back each of our followers."""
         log.debug("fetching followers to followback")
-        followers = set([ x.id for x in twitter.GetFollowers() ])
+        followers = set([x.id for x in twitter.GetFollowers()])
         log.debug("fetching friends to followback")
-        following = set([ x.id for x in twitter.GetFriends() ])
+        following = set([x.id for x in twitter.GetFriends()])
 
         for user_id in followers - following:
             try:
@@ -144,11 +153,10 @@ class DoadDoad(object):
             except TwitterError as e:
                 log.warn("error in following user id %s: %s", user_id, e)
 
-
     def update(self, twitter, probability=33, maxupdates=0):
         """Update the state with new timelines from all followers.
 
-           Additionally change the profile picture with probability with one from our followers."""
+        Additionally change the profile picture with probability with one from our followers."""
         self._followback(twitter)
 
         log.debug("fetching followers")
@@ -159,8 +167,9 @@ class DoadDoad(object):
             followers = followers[:maxupdates]
 
         for follower in followers:
-            log.debug("fetching timeline for %s (@%s)" % (follower.name,
-                follower.screen_name))
+            log.debug(
+                "fetching timeline for %s (@%s)" % (follower.name, follower.screen_name)
+            )
             self.add_timeline(twitter, follower.id)
 
     def add_timeline(self, twitter, user, count=20):
@@ -182,33 +191,94 @@ class DoadDoad(object):
         tweet = Tweet(tweet)
         self.state[tweet.status.id] = tweet
 
+
 # XXX interactive mode: generate tweets and selectively choose which ones to post
 # XXX randomly reply to people which have replied to us?
 def main():
 
     parser = optparse.OptionParser()
-    parser.add_option("-n", "--dry-run", dest="dry_run", default=False,
-            action="store_true", help="do not change the state, just print what would be done")
-    parser.add_option("-d", "--debug", dest="debug", default=False,
-            action="store_true", help="print debug information")
-    parser.add_option("-r", "--refresh", dest="state_refresh", default=7200,
-            metavar="SECONDS", help="refresh the state every SECONDS (%default)")
-    parser.add_option("-f", "--state-file", dest="state_file", default="doaddoad.state",
-            metavar="FILE", help="load and save state from FILE (%default)")
-    parser.add_option("-t", "--trim", dest="state_limit", default=5000,
-            metavar="NUMBER", help="keep the last NUMBER tweets when saving state, 0 to disable (%default)")
-    parser.add_option("-s", "--status", dest="usertweet", metavar="TEXT", help="post an arbitrary status to twitter")
-    parser.add_option("-l", "--lang", dest="language", default=None, metavar="LANG",
-            help="consider only tweets in language code LANG "
-                 "e.g. 'en' (default: all tweets)")
+    parser.add_option(
+        "-n",
+        "--dry-run",
+        dest="dry_run",
+        default=False,
+        action="store_true",
+        help="do not change the state, just print what would be done",
+    )
+    parser.add_option(
+        "-d",
+        "--debug",
+        dest="debug",
+        default=False,
+        action="store_true",
+        help="print debug information",
+    )
+    parser.add_option(
+        "-r",
+        "--refresh",
+        dest="state_refresh",
+        default=7200,
+        metavar="SECONDS",
+        help="refresh the state every SECONDS (%default)",
+    )
+    parser.add_option(
+        "-f",
+        "--state-file",
+        dest="state_file",
+        default="doaddoad.state",
+        metavar="FILE",
+        help="load and save state from FILE (%default)",
+    )
+    parser.add_option(
+        "-t",
+        "--trim",
+        dest="state_limit",
+        default=5000,
+        metavar="NUMBER",
+        help="keep the last NUMBER tweets when saving state, 0 to disable (%default)",
+    )
+    parser.add_option(
+        "-s",
+        "--status",
+        dest="usertweet",
+        metavar="TEXT",
+        help="post an arbitrary status to twitter",
+    )
+    parser.add_option(
+        "-l",
+        "--lang",
+        dest="language",
+        default=None,
+        metavar="LANG",
+        help="consider only tweets in language code LANG "
+        "e.g. 'en' (default: all tweets)",
+    )
     # this is done only when updating the state, but it isn't clear
-    parser.add_option("-p", "--probability", dest="probability", default=33, metavar="NUMBER",
-            help="probability of setting the profile to picture to one of the followers' (%default)")
-    parser.add_option("-m", "--maxupdates", dest="maxupdates", default=0,
-            metavar="NUMBER", type=int,
-            help="limit the number of timelines to fetch, useful if hitting twitter's API limit (%default)")
-    parser.add_option("-L", "--logfile", action="store", dest="logfile", metavar="FILENAME",
-            help="write log to FILENAME")
+    parser.add_option(
+        "-p",
+        "--probability",
+        dest="probability",
+        default=33,
+        metavar="NUMBER",
+        help="probability of setting the profile to picture to one of the followers' (%default)",
+    )
+    parser.add_option(
+        "-m",
+        "--maxupdates",
+        dest="maxupdates",
+        default=0,
+        metavar="NUMBER",
+        type=int,
+        help="limit the number of timelines to fetch, useful if hitting twitter's API limit (%default)",
+    )
+    parser.add_option(
+        "-L",
+        "--logfile",
+        action="store",
+        dest="logfile",
+        metavar="FILENAME",
+        help="write log to FILENAME",
+    )
 
     opts, args = parser.parse_args()
 
@@ -216,15 +286,19 @@ def main():
     if opts.logfile:
         logfd = open(opts.logfile, "a")
 
-    logging.basicConfig(level=logging.INFO, stream=logfd, format="[%(asctime)-15s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, stream=logfd, format="[%(asctime)-15s] %(message)s"
+    )
     if opts.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    twitter_api = twitter.Api(consumer_key=secrets.consumer_key,
-            consumer_secret=secrets.consumer_secret,
-            access_token_key=secrets.access_token_key,
-            access_token_secret=secrets.access_token_secret,
-            sleep_on_rate_limit=True)
+    twitter_api = twitter.Api(
+        consumer_key=secrets.consumer_key,
+        consumer_secret=secrets.consumer_secret,
+        access_token_key=secrets.access_token_key,
+        access_token_secret=secrets.access_token_secret,
+        sleep_on_rate_limit=True,
+    )
 
     d = DoadDoad(state_file=opts.state_file)
     d.load_state()
@@ -232,8 +306,10 @@ def main():
     # update the state file with the timeline from our followers first
     # in case of an empty state this "primes" the state (if we've got any followers)
     if not opts.dry_run:
-        if not os.path.exists(d.state_file) or \
-                os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh:
+        if (
+            not os.path.exists(d.state_file)
+            or os.stat(d.state_file).st_mtime <= time.time() - opts.state_refresh
+        ):
             log.info("updating state file %s" % d.state_file)
             d.update(twitter_api, opts.probability, opts.maxupdates)
             d.save_state(limit=opts.state_limit)
@@ -251,11 +327,8 @@ def main():
     if not opts.dry_run:
         twitter_api.PostUpdate(tweet)
 
-    rate_limit_status = twitter_api.GetRateLimitStatus()
-    log.info("remaining API hits %s", rate_limit_status.get('remaining_hits', 'N/A'))
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig()
     logging.error("this module should be imported")
     sys.exit(1)
