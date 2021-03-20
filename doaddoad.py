@@ -54,7 +54,7 @@ class DoadDoad(object):
             return
 
         log.debug("loading state from %s", self.state_file)
-        with open(self.state_file, "r") as state_file:
+        with open(self.state_file, "rb") as state_file:
             self.state = pickle.load(state_file)
 
     # XXX make load/save state context managers
@@ -63,7 +63,7 @@ class DoadDoad(object):
         self._trim_state(limit)
 
         log.debug("saving state to %s", self.state_file)
-        with open(self.state_file, "w") as state_file:
+        with open(self.state_file, "wb") as state_file:
             pickle.dump(self.state, state_file, -1)
 
     # XXX generating a lot of tweets is not efficient because we're forking dadadodo
