@@ -46,7 +46,8 @@ class DoadDoad(object):
                 stdout=subprocess.PIPE)
         out, err = dadadodo.communicate(input_string)
 
-        return out
+        # dadadodo is ascii only, force encoding from bytes
+        return str(out, 'ascii')
 
     def load_state(self):
         if not os.path.exists(self.state_file):
@@ -78,8 +79,9 @@ class DoadDoad(object):
                 tweet = self.state[tweet_id]
                 if language and language != tweet.get_language_code():
                     continue
+                # dadadodo seems to ignore non-ascii input
                 text = tweet.status.text.encode("ascii", "ignore")
-                text = re.sub(r'\s+', ' ', text)
+                text = re.sub(b'\s+', b' ', text)
                 yield text
 
         def _extract_tweet(text):
@@ -109,9 +111,10 @@ class DoadDoad(object):
         if language and language not in Tweet.language_codes:
             raise DoadDoadError("language %r is not detectable" % language)
 
-        input_text = " ".join(_dadadodo_input(language))
+        # XXX limit input text
+        input_text = b" ".join(_dadadodo_input(language))
         result = self._run_dadadodo(input_text)
-        #log.debug("text from dadadodo '%r'", result)
+        log.debug("text from dadadodo %r", result)
 
         generated_tweet = _extract_tweet(result)
         log.debug("extracted tweet %r", generated_tweet)
