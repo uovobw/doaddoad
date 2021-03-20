@@ -1,3 +1,2 @@
-httlib2
-requests
-
+python-twitter
+pycld2

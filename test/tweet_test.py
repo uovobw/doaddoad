@@ -1,13 +1,15 @@
+import unittest
+
 from doaddoad import DoadDoad
 from Tweet import Tweet
-import pickle
-from nose.plugins.skip import Skip, SkipTest
-
-def test_tweet_creation():
-	twitter = pickle.load(open("test/data/singleTwitterStatus","r"))
-	# create the tweet obj
-	doaddoadTweet = Tweet(twitter)
-	assert doaddoadTweet.status == twitter
-	assert doaddoadTweet.get_language_code() == "en"
 
 
+class DummyStatus(object):
+    def __init__(self, text):
+        self.text = text
+
+
+class TweetTest(unittest.TestCase):
+    def test_tweet_creation(self):
+      doaddoadTweet = Tweet(DummyStatus("This is an english sentence."))
+      self.assertEqual(doaddoadTweet.get_language_code(), "en")
