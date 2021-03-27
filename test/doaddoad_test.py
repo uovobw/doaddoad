@@ -3,17 +3,17 @@ import time
 import unittest
 
 import twitter
-from doaddoad import DoadDoad, Tweet
+import doaddoad
 
 
 class DoaddoadStateTest(unittest.TestCase):
     def setUp(self):
-        self.d = DoadDoad()
+        self.d = doaddoad.DoadDoad()
 
     def _add_tweet(self, text):
         created_at = time.time()
         id = random.randint(0, int(created_at))
-        self.d.state[id] = Tweet(
+        self.d.state[id] = doaddoad.Tweet(
             twitter.Status.NewFromJsonDict(
                 {"id": id, "created_at": created_at, "text": text}
             )
@@ -36,3 +36,10 @@ class DoaddoadStateTest(unittest.TestCase):
 
         res = self.d._fix_rt("foo bar")
         assert res == "foo bar"
+
+    def test_extract_tweet(self):
+        res = self.d._extract_tweet("foo \t   bar \n  baz\t\t meh \n\n")
+        assert res == "foo bar baz meh"
+
+        res = self.d._extract_tweet("a" * 666)
+        assert res == "a" * doaddoad.TWEET_MAXLENGTH

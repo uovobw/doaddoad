@@ -126,7 +126,8 @@ class DoadDoad(object):
             log.debug("trimming '%s' from %d to %d", text, len(text), TWEET_MAXLENGTH)
             # trim to length and discard truncated words
             text = text[:TWEET_MAXLENGTH]
-            text = text[: text.rindex(" ")]
+            if " " in text:
+                text = text[: text.rindex(" ")]
 
         return self._fix_rt(text)
 
