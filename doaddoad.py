@@ -74,60 +74,61 @@ class DoadDoad(object):
     def generate_tweet(self, language=None):
         """Generate a random tweet from the given state, consider only tweets in the given language."""
 
-        def _dadadodo_input(language=None):
-            """Generate input for dadadodo, munge the state into something usable."""
-            shuffled_ids = list(self.state.keys())
-            random.shuffle(shuffled_ids)
-            for tweet_id in shuffled_ids:
-                tweet = self.state[tweet_id]
-                if language and language != tweet.get_language_code():
-                    continue
-                # dadadodo seems to ignore non-ascii input
-                text = tweet.status.text.encode("ascii", "ignore")
-                text = re.sub(b"\s+", b" ", text)
-                yield text
-
-        def _extract_tweet(text):
-            """Fix output from dadadodo into a usable tweet."""
-            log.debug("extracting a tweet from %r", text)
-            text = text.replace("\t", " ").replace("\n", " ").strip()
-            text = re.sub(" +", " ", text)
-
-            if len(text) > TWEET_MAXLENGTH:
-                log.debug(
-                    "trimming '%s' from %d to %d", text, len(text), TWEET_MAXLENGTH
-                )
-                # trim to length and discard truncated words
-                text = text[:TWEET_MAXLENGTH]
-                text = text[: text.rindex(" ")]
-
-            # if an RT is generated in the middle of a tweet, move RT at the
-            # beginning and prepend whatever word was after that with @
-            rt_find_re = re.compile(
-                r"(?P<lead>^.*)([Rr][Tt]) +@?" "(?P<who>\S+) ?(?P<trail>.*)$"
-            )
-            rt_match = rt_find_re.match(text)
-            if rt_match:
-                text = "RT @%s %s%s" % (
-                    rt_match.group("who"),
-                    rt_match.group("lead"),
-                    rt_match.group("trail"),
-                )
-
-            return text
-
         if language and language not in Tweet.language_codes:
             raise DoadDoadError("language %r is not detectable" % language)
 
         # XXX limit input text
-        input_text = b" ".join(_dadadodo_input(language))
+        input_text = b" ".join(self._dadadodo_input(language))
         result = self._run_dadadodo(input_text)
         log.debug("text from dadadodo %r", result)
 
-        generated_tweet = _extract_tweet(result)
+        generated_tweet = self._extract_tweet(result)
         log.debug("extracted tweet %r", generated_tweet)
 
         return generated_tweet
+
+    def _dadadodo_input(self, language=None):
+        """Generate input for dadadodo, munge the state into something usable."""
+        shuffled_ids = list(self.state.keys())
+        random.shuffle(shuffled_ids)
+        for tweet_id in shuffled_ids:
+            tweet = self.state[tweet_id]
+            if language and language != tweet.get_language_code():
+                continue
+            # dadadodo seems to ignore non-ascii input
+            text = tweet.status.text.encode("ascii", "ignore")
+            text = re.sub(b"\s+", b" ", text)
+            yield text
+
+    def _fix_rt(self, text):
+        # if an RT is generated in the middle of a tweet, move RT at the
+        # beginning and prepend whatever word was after that with @
+        rt_find_re = re.compile(
+            r"(?P<lead>^.*)([Rr][Tt]) +@?" "(?P<who>\S+) ?(?P<trail>.*)$"
+        )
+        rt_match = rt_find_re.match(text)
+        if rt_match:
+            text = "RT @%s %s%s" % (
+                rt_match.group("who"),
+                rt_match.group("lead"),
+                rt_match.group("trail"),
+            )
+            text = text.strip()
+        return text
+
+    def _extract_tweet(self, text):
+        """Fix output from dadadodo into a usable tweet."""
+        log.debug("extracting a tweet from %r", text)
+        text = text.replace("\t", " ").replace("\n", " ").strip()
+        text = re.sub(" +", " ", text)
+
+        if len(text) > TWEET_MAXLENGTH:
+            log.debug("trimming '%s' from %d to %d", text, len(text), TWEET_MAXLENGTH)
+            # trim to length and discard truncated words
+            text = text[:TWEET_MAXLENGTH]
+            text = text[: text.rindex(" ")]
+
+        return self._fix_rt(text)
 
     def _trim_state(self, limit):
         if limit == 0:

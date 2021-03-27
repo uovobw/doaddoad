@@ -29,3 +29,10 @@ class DoaddoadStateTest(unittest.TestCase):
         assert len(t) > 10
         assert "  " not in t
         assert "\n" not in t
+
+    def test_fix_rt(self):
+        res = self.d._fix_rt("foo RT @bar")
+        assert res == "RT @bar foo"
+
+        res = self.d._fix_rt("foo bar")
+        assert res == "foo bar"
