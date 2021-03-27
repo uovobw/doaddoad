@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import time
+import textwrap
 
 from twitter import TwitterError
 from Tweet import Tweet
@@ -71,7 +72,7 @@ class DoadDoad(object):
 
     # XXX generating a lot of tweets is not efficient because we're forking dadadodo
     # each time
-    def generate_tweet(self, language=None):
+    def generate_tweets(self, language=None):
         """Generate a random tweet from the given state, consider only tweets in the given language."""
 
         if language and language not in Tweet.language_codes:
@@ -82,10 +83,7 @@ class DoadDoad(object):
         result = self._run_dadadodo(input_text)
         log.debug("text from dadadodo %r", result)
 
-        generated_tweet = self._extract_tweet(result)
-        log.debug("extracted tweet %r", generated_tweet)
-
-        return generated_tweet
+        return self._extract_tweets(result)
 
     def _dadadodo_input(self, language=None):
         """Generate input for dadadodo, munge the state into something usable."""
@@ -119,20 +117,14 @@ class DoadDoad(object):
             text = text.strip()
         return text
 
-    def _extract_tweet(self, text):
+    def _extract_tweets(self, text):
         """Fix output from dadadodo into a usable tweet."""
         log.debug("extracting a tweet from %r", text)
         text = text.replace("\t", " ").replace("\n", " ").strip()
-        text = re.sub(" +", " ", text)
+        text = re.sub("\s+", " ", text)
 
-        if len(text) > TWEET_MAXLENGTH:
-            log.debug("trimming '%s' from %d to %d", text, len(text), TWEET_MAXLENGTH)
-            # trim to length and discard truncated words
-            text = text[:TWEET_MAXLENGTH]
-            if " " in text:
-                text = text[: text.rindex(" ")]
-
-        return self._fix_rt(text)
+        for tweet in textwrap.wrap(text, TWEET_MAXLENGTH):
+            yield self._fix_rt(tweet)
 
     def _trim_state(self, limit):
         if limit == 0:
@@ -322,10 +314,11 @@ def main():
     if opts.usertweet:
         tweet = opts.usertweet
     else:
-        tweet = d.generate_tweet(opts.language)
+        tweet = d.generate_tweets(opts.language)
         if not tweet:
             log.error("didn't get a tweet to post!")
             return 1
+        tweet = next(tweet)
 
     log.info("updating timeline with %r" % tweet)
 

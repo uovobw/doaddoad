@@ -23,9 +23,9 @@ class DoaddoadStateTest(unittest.TestCase):
         self.d.load_state()
         assert self.d.state == {}
 
-    def test_generate_tweet(self):
+    def test_generate_tweets(self):
         self._add_tweet("lorem ipsum dolor sit amet")
-        t = self.d.generate_tweet()
+        t = next(self.d.generate_tweets())
         assert len(t) > 10
         assert "  " not in t
         assert "\n" not in t
@@ -37,9 +37,11 @@ class DoaddoadStateTest(unittest.TestCase):
         res = self.d._fix_rt("foo bar")
         assert res == "foo bar"
 
-    def test_extract_tweet(self):
-        res = self.d._extract_tweet("foo \t   bar \n  baz\t\t meh \n\n")
+    def test_extract_tweets_short(self):
+        res = self.d._extract_tweets("foo \t   bar \n  baz\t\t meh \n\n")
+        res = next(res)
         assert res == "foo bar baz meh"
 
-        res = self.d._extract_tweet("a" * 666)
-        assert res == "a" * doaddoad.TWEET_MAXLENGTH
+    def test_extract_tweets_wrapped(self):
+        res = self.d._extract_tweets("word " * doaddoad.TWEET_MAXLENGTH)
+        assert next(res) == ("word " * int(doaddoad.TWEET_MAXLENGTH / 5)).strip()
