@@ -98,6 +98,9 @@ class DoadDoad(object):
             # dadadodo seems to ignore non-ascii input
             text = tweet.status.text.encode("ascii", "ignore")
             text = re.sub(b"\s+", b" ", text)
+
+            # Do not pollute corpus with links
+            text = re.sub(b"https?://\S+", b"", text, flags=re.IGNORECASE)
             yield text
 
     def _fix_rt(self, text):
