@@ -10,9 +10,11 @@ import subprocess
 import sys
 import time
 import textwrap
+import itertools
 
 from twitter import TwitterError
 from Tweet import Tweet
+import pycld2 as cld
 
 # you'll need at least the git version e572f2ff4
 # https://github.com/bear/python-twitter
@@ -21,6 +23,7 @@ import twitter
 import secrets
 
 TWEET_MAXLENGTH = 140
+GENERATION_ATTEMPTS = 5
 
 log = logging.getLogger(__name__)
 
@@ -314,11 +317,20 @@ def main():
     if opts.usertweet:
         tweet = opts.usertweet
     else:
-        tweet = d.generate_tweets(opts.language)
-        if not tweet:
-            log.error("didn't get a tweet to post!")
-            return 1
-        tweet = next(tweet)
+        for tweet in itertools.chain.from_iterable(
+            (d.generate_tweets(opts.language) for x in range(GENERATION_ATTEMPTS))
+        ):
+            if re.match("^RT \S+$", tweet):
+                continue
+
+            if opts.language is not None:
+                reliable, _, (top_lang, *langs) = cld.detect(tweet)
+                if not reliable:
+                    continue
+                if opts.language != top_lang[1]:
+                    continue
+
+            break
 
     log.info("updating timeline with %r" % tweet)
 
