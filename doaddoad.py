@@ -250,6 +250,8 @@ def main():
         dest="language",
         default=None,
         metavar="LANG",
+        choices=list(set([x[1] for x in cld.LANGUAGES if not
+            x[1].startswith('xx-')])),
         help="consider only tweets in language code LANG "
         "e.g. 'en' (default: all tweets)",
     )
